@@ -1,13 +1,7 @@
-import RPi.GPIO as GPIO
-from gpiozero import LightSensor
-from time import sleep
-import time
 import sys
 import requests
 import json
 import http.client as httplib
-import signal
-import subprocess
 
 url = 'https://parseapi.back4app.com/classes/water_use_scoreboard/'
 appkey = 'XP2YymokHIQgloxN10YNdjgGY0s1q6Fzf4GhavKD'
@@ -15,42 +9,16 @@ restkey = 'NqMKcQLm8aLz79ibqtyOWWuxKqzTKeN6xplIMXCK'
 headers = {'X-Parse-Application-Id': appkey, 'X-Parse-REST-API-Key': restkey}
 objId = 'JHBJJfsioy'
 
-volume = 0
-
 def main():
-    global volume
-    GPIO.setmode(GPIO.BOARD)
-    INPUT_PIN = 16
-    GPIO.setup(INPUT_PIN, GPIO.IN)
-    reading = 0
-    lastReading = 0
-    volume = 0
+    args = sys.argv
+    #print(sys.argv)
 
-    signal.signal(signal.SIGUSR1, usr_handle)
-
-    while (True):
-        if (GPIO.input(INPUT_PIN) == 0):
-            reading = 0
-        else:
-            reading = 1
-        if (reading != lastReading):
-            volume += 1.75
-        lastReading = reading
-        print(volume)
-
-        sleep(0.01)
-
-    return
-
-def usr_handle(signum,frame):
-    global volume
-    global objId
-    process = subprocess.Popen(['/home/hack/update.sh', f'{volume}'], text=True)
-    volume = 0
-    return
+    volume = float(sys.argv[1])
     result = requests.get(url, headers=headers)
     get = result.json()['results']
     update_water(get,objectId=objId,score=volume)
+
+    return
 
 def update_water(rows,objectId='',score=0):
     if objectId == '':
@@ -77,3 +45,4 @@ def update_water(rows,objectId='',score=0):
 
 if __name__ == '__main__':
     main()
+
